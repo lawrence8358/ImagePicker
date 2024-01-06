@@ -104,16 +104,21 @@ public class ImagePicker extends CordovaPlugin {
 
     @SuppressLint("InlinedApi")
     private boolean hasReadPermission() {
-        return Build.VERSION.SDK_INT < 23 ||
-            PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(this.cordova.getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE);
+        String[] permissions = _getPermissions();
+        return _hasPermissions(permissions);
+        // return Build.VERSION.SDK_INT < 23 ||
+        //     PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(this.cordova.getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE);
     }
 
     @SuppressLint("InlinedApi")
     private void requestReadPermission() {
         if (!hasReadPermission()) {
+            String[] permissions = _getPermissions();
+
             ActivityCompat.requestPermissions(
                 this.cordova.getActivity(),
-                new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
+                permissions,
+                // new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
                 PERMISSION_REQUEST_CODE);
         }
         // This method executes async and we seem to have no known way to receive the result
@@ -121,6 +126,25 @@ public class ImagePicker extends CordovaPlugin {
         callbackContext.success();
     }
 
+    // 2024/01/06 支援 Android 13 取得檔案權限
+    private String[] _getPermissions() {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return new String[]{ Manifest.permission.READ_MEDIA_IMAGES };
+        } else {
+            return new String[] {Manifest.permission.READ_EXTERNAL_STORAGE};
+        }
+    }
+
+    // 2024/01/06 支援 Android 13 驗證檔案權限
+    private boolean _hasPermissions(String[] permissions) {
+        for (String permission: permissions) {
+            if (!org.apache.cordova.PermissionHelper.hasPermission(this, permission)) {
+                return false;
+            }
+        }
+        return true;
+    }
+  
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK && data != null) {
             int sync = data.getIntExtra("bigdata:synccode", -1);

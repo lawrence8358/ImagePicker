@@ -124,7 +124,7 @@ public class MultiImageChooserActivity extends AppCompatActivity implements
     private ProgressDialog progress;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) { 
         super.onCreate(savedInstanceState);
         fakeR = new FakeR(this);
         setContentView(fakeR.getId("layout", "multiselectorgrid"));
@@ -258,13 +258,21 @@ public class MultiImageChooserActivity extends AppCompatActivity implements
                 break;
         }
 
+        /* 2021/10/21, Justin 
+         * a11 之後版本大寫會認不出來
+         */
+        String order = "DATE_MODIFIED DESC";
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R){
+            order = MediaStore.Images.ImageColumns.DATE_MODIFIED + " desc";
+        }
+
         return new CursorLoader(
                 this,
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 img.toArray(new String[img.size()]),
                 null,
                 null,
-                "DATE_MODIFIED DESC"
+                order
         );
     }
 
